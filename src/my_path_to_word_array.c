@@ -23,11 +23,13 @@ int my_count_space(char *str)
 
 int my_len_word(char *str)
 {
-    int i = 0;
+    static int i = 0;
 
     while (str[i] && str[i] != ':') {
         i++;
     }
+    while (str[i] && str[i] == ':')
+        i += 1;
     return (i);
 }
 
@@ -41,7 +43,6 @@ char *my_put_in_str(char *str, char *result)
         i++;
         j++;
     }
-    result[j] = '\n';
     while (str[i] && str[i] == ':')
         i += 1;
     return (result);
@@ -55,11 +56,9 @@ char **my_path_to_word_array(char *str)
 
     result = malloc(sizeof(char *) * my_strlen(str) * space);
     while (k != space) {
-        result[k] = malloc(sizeof(char) * my_len_word(str) + 11);
+        result[k] = malloc(sizeof(char) * my_len_word(str));
         result[k] = my_put_in_str(str, result[k]);
         k++;
     }
-    my_putstr(result[1]);
-    free(result);
     return (result);
 }

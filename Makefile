@@ -7,7 +7,9 @@
 
 SRC 	=	src/minishell.c\
 			src/my_str_to_word_array.c\
-			src/my_path_to_word_array.c
+			src/my_path_to_word_array.c\
+			src/find_my_path.c\
+			src/main.c
 
 OBJ 	=	$(SRC:.c=.o)
 

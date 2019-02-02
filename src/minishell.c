@@ -6,61 +6,88 @@
 */
 #include "my.h"
 
-void draw_my_env(char **env)
+void fork_bin(char **env, char *str, char **new_str, char *path)
 {
-    int k = 0;
+    pid_t pid;
 
-    while (env[k] != 0) {
-        my_putstr(env[k]);
-        k++;
+    pid = fork();
+    if (pid > 0)
+        wait(0);
+    else if (pid == 0) {
+        execve(path, new_str, env);
     }
 }
 
-char *my_getenv(char **env, char *elem)
+int find_path(char **env, char *str, char **new_str)
 {
+    char **path = NULL;
+    char *elem = NULL;
     int k = 0;
-    int j = 5;
     int i = 0;
 
-    while (env[k] != NULL) {
-        if (env[k][0] == 'P' && env[k][1] == 'A' && env[k][2] == 'T' && 
-            env[k][3] == 'H' && env[k][4] == '=') {
-            while (env[k][j] != '\0') {
-                elem[i] = env[k][j];
-                j++;
-                i++;
-            }
+    path = malloc(sizeof(char *) * 1000);
+    elem = malloc(sizeof(char) * 1000);
+    elem = my_getenv(env, elem);
+    path = my_path_to_word_array(elem);
+    while (path[k] != NULL) {
+        my_strcat(path[k], "/");
+        my_strcat(path[k], str);
+        i = access(path[k], F_OK);
+        if (i == 0) {
+            fork_bin(env, str, new_str, path[k]);
+            return (0);
         }
         k++;
     }
-    elem[i] = '\0';
-    return (elem);
+    free(elem);
+    free(path);
+}
+
+void check_command(char **env, char *str, char **new_str)
+{
+    int i = 0;
+
+    if (str[0] == 'e' && str[1] == 'n' && str[2] == 'v') {
+        while (env[i] != NULL) {
+            my_putstr(env[i]);
+            my_putchar('\n');
+            i++;
+        }
+    }
+    else
+        find_path(env, str, new_str);
+}
+
+int end_of_file(int eof, char *str)
+{
+    if (eof == -1) {
+        my_putstr("\nexit");
+        exit(0);
+    }
+    else if (str[0] == 'e' && str[1] == 'x' && str[2] == 'i' && str[3] == 't'
+            && str[4] == '\n') {
+        my_putstr("exit");
+        exit(0);
+    }
+    else
+        return (0);
 }
 
 int my_minishell(char **env)
 {
     char *str = NULL;
+    char **new_str = NULL;
     size_t len = 0;
-    char *elem = NULL;
     int eof = 0;
+    int k = 0;
 
-    elem = malloc(sizeof(char *) * 100);
+    str = malloc(sizeof(char *) * 1000);
+    new_str = malloc(sizeof(char *) * 1000);
     while (42) {
         my_putstr("$>");
         eof = getline(&str, &len, stdin);
-        if (eof == -1) {
-            my_putstr("\nexit");
-            return (0);
-        }
-        elem = my_getenv(env, elem);
-        my_path_to_word_array(elem);
-        }
-    free(elem);
+        end_of_file(eof, str);
+        new_str = my_str_to_word_array(str, " ");
+        check_command(env, str, new_str);
+    }
 }
-
-int main(int ac, char **av, char **env)
-{
-    my_minishell(env);
-}
-
-//PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/home/J.Salies/.local/bin:/home/J.Salies/bin
